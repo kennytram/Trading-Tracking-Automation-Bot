@@ -27,4 +27,4 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     print(f"Synced {len(synced)} commands")
 
-bot.run(os.environ.get(DISCORD_TOKEN))
+bot.run(os.environ.get('DISCORD_TOKEN'))

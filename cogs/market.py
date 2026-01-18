@@ -87,7 +87,7 @@ class Market(commands.Cog):
 
         embed.set_footer(
             text=f"Requested by {ctx.author.name}",
-            icon_url=(os.environ.get(ICON_URL))
+            icon_url=(os.environ.get('ICON_URL'))
         )
     
         view = MarketView(self.bot)
