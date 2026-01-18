@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from windtail_config import RESET_HOUR_UTC
+# from windtail_config import RESET_HOUR_UTC
 
 
 def next_weekday_at_hour(weekday: int, hour: int) -> int:

@@ -8,7 +8,7 @@ from utils.time_utils import (
     next_weekday_at_hour,
     next_thursday_and_sunday
 )
-from windtail_config import RESET_HOUR_UTC, ICON_URL
+# from windtail_config import RESET_HOUR_UTC, ICON_URL
 
 
 def format_market_embed(guild, rows, requester_name="System"):

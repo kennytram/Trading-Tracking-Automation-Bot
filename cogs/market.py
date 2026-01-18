@@ -7,7 +7,7 @@ import windtail_db as db
 from utils.embed_utils import format_market_embed
 from cogs.market_ui import MarketView
 from cogs.market_embed import refresh_market_embed
-from windtail_config import ICON_URL
+# from windtail_config import ICON_URL
 
 
 RESET_HOUR_UTC = 22

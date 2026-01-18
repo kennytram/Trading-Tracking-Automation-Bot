@@ -3,7 +3,7 @@
 import discord
 import windtail_db as db
 from utils.embed_utils import format_market_embed  # adjust if needed
-from windtail_config import ICON_URL
+# from windtail_config import ICON_URL
 
 
 async def refresh_market_embed(

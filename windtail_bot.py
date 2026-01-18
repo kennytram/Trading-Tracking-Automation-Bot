@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from windtail_config import DISCORD_TOKEN
+# from windtail_config import DISCORD_TOKEN
 from cogs.market_ui import MarketView
 import windtail_db as db
 
