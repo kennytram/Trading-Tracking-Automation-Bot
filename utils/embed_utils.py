@@ -14,8 +14,8 @@ from utils.time_utils import (
 def format_market_embed(guild, rows, requester_name="System"):
     now = datetime.now(timezone.utc)
 
-    unix_today_reset = next_reset_today_or_tomorrow(RESET_HOUR_UTC)
-    unix_thursday, unix_sunday = next_thursday_and_sunday(RESET_HOUR_UTC)
+    unix_today_reset = next_reset_today_or_tomorrow(os.environ.get(RESET_HOUR_UTC))
+    unix_thursday, unix_sunday = next_thursday_and_sunday(os.environ.get(RESET_HOUR_UTC))
 
     embed = discord.Embed(
         title="Where Winds Meet Market Trades",
@@ -32,7 +32,7 @@ def format_market_embed(guild, rows, requester_name="System"):
     
     embed.set_footer(
         text=f"Updated by {requester_name}",
-        icon_url=ICON_URL
+        icon_url=(os.environ.get(ICON_URL))
     )
 
     if not rows:

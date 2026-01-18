@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 # from windtail_config import DISCORD_TOKEN
+import os
 from cogs.market_ui import MarketView
 import windtail_db as db
 
@@ -26,4 +27,4 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     print(f"Synced {len(synced)} commands")
 
-bot.run(DISCORD_TOKEN)
+bot.run(os.environ.get(DISCORD_TOKEN))
