@@ -1,4 +1,5 @@
 import discord
+import os
 from discord.ext import commands, tasks
 from datetime import timezone, time as dtime
 from collections import defaultdict
@@ -9,9 +10,7 @@ from cogs.market_ui import MarketView
 from cogs.market_embed import refresh_market_embed
 # from windtail_config import ICON_URL
 
-
-RESET_HOUR_UTC = 22
-
+RESET_HOUR_UTC = int(os.environ.get("RESET_HOUR_UTC"))
 
 class Market(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -71,39 +70,58 @@ class Market(commands.Cog):
     # ======================================================
     @commands.hybrid_command()
     async def market(self, ctx: commands.Context):
-        """Create or refresh the market post."""
-        meta = db.get_market_meta(ctx.guild.id)
-
-        if meta:
-            try:
-                channel = self.bot.get_channel(meta["channel_id"])
-                msg = await channel.fetch_message(meta["message_id"])
-                await msg.delete()
-            except:
-                pass
+        """Create a NEW market post and delete all previous ones."""
 
         prices = db.fetch_prices(ctx.guild.id)
         embed = format_market_embed(ctx.guild, prices, ctx.author.name)
-
-        embed.set_footer(
-            text=f"Requested by {ctx.author.name}",
-            icon_url=(os.environ.get('ICON_URL'))
-        )
-    
         view = MarketView(self.bot)
-        message = await ctx.send(embed=embed, view=view)
-        await message.pin()
 
-        # delete system pin message
+        # ==========================
+        # DELETE OLD MARKET POSTS
+        # ==========================
+        meta = db.get_market_meta(ctx.guild.id)
+
+        if meta:
+            channel = self.bot.get_channel(meta["channel_id"])
+            if channel:
+                try:
+                    old_msg = await channel.fetch_message(meta["message_id"])
+                    await old_msg.delete()
+                except discord.NotFound:
+                    pass
+                except discord.Forbidden:
+                    print("Missing permissions to delete old market")
+                except discord.HTTPException as e:
+                    print("Failed deleting old market:", e)
+
+        # ==========================
+        # CREATE NEW MARKET POST
+        # ==========================
+        msg = await ctx.send(embed=embed, view=view)
+        await msg.pin()
+
+        # Delete the system pin message
         async for m in ctx.channel.history(limit=5):
             if m.type == discord.MessageType.pins_add:
                 await m.delete()
                 break
 
+        db.set_market_meta(ctx.guild.id, ctx.channel.id, msg.id)
+
+        # ==========================
+        # CLEANUP / RESPONSE
+        # ==========================
         if ctx.message:
+            # prefix command
             await ctx.message.delete()
 
-        db.set_market_meta(ctx.guild.id, ctx.channel.id, message.id)
+        elif ctx.interaction:
+            # slash command must respond
+            await ctx.interaction.response.send_message(
+                "📌 New market post created.",
+                ephemeral=True
+            )
+
 
     # ======================================================
     # ADD PRICE
@@ -196,7 +214,7 @@ class Market(commands.Cog):
     # ======================================================
     # DAILY RESET TASK
     # ======================================================
-    @tasks.loop(time=dtime(hour=RESET_HOUR_UTC, minute=0, tzinfo=timezone.utc))
+    @tasks.loop(time=dtime(hour=RESET_HOUR_UTC, tzinfo=timezone.utc))
     async def daily_reset(self):
         db.reset_market_prices()
 

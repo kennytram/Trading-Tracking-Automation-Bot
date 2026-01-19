@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 # from windtail_config import DISCORD_TOKEN
+from dotenv import load_dotenv
 import os
 from cogs.market_ui import MarketView
 import windtail_db as db
@@ -10,6 +11,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 db.init_db()
+load_dotenv()
 
 @bot.event
 async def on_ready():
@@ -17,11 +19,11 @@ async def on_ready():
     bot.add_view(MarketView(bot))
 
 
-    # guild = discord.Object(id=784731196117876756)
-    # bot.tree.copy_global_to(guild=guild)
-    # synced = await bot.tree.sync(guild=guild)
+    guild = discord.Object(id=784731196117876756)
+    bot.tree.copy_global_to(guild=guild)
+    synced = await bot.tree.sync(guild=guild)
 
-    synced = await bot.tree.sync()
+    # synced = await bot.tree.sync()
 
 
     print(f"Logged in as {bot.user}")
