@@ -2,7 +2,7 @@ import discord
 import os
 import asyncio
 from discord.ext import commands, tasks
-from datetime import timezone, time as dtime
+from datetime import datetime, timezone, time as dtime
 from collections import defaultdict
 
 import windtail_db as db
@@ -261,7 +261,7 @@ class Market(commands.Cog):
     # ======================================================
     @tasks.loop(time=dtime(hour=RESET_HOUR_UTC, tzinfo=timezone.utc))
     async def monthly_reset(self):
-        now = dtime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
 
         if now.day != 1:
             return

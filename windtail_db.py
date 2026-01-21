@@ -3,8 +3,8 @@ import os
 
 DB_PATH = "market.db"
 
-items = []
-players = []
+items=[]
+players=[]
 
 # ======================
 # ERROR CLASSES

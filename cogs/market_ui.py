@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from discord.ui import View, button, Modal, TextInput, Select, Button, FileUpload
+from discord.ui import View, button, Modal, TextInput, Select, Button
 import windtail_db as db
 from cogs.market_embed import refresh_market_embed
 
