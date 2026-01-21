@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from discord.ui import View, button, Modal, TextInput, Select, Button
+from discord.ui import View, button, Modal, TextInput, Select, Button, FileUpload
 import windtail_db as db
 from cogs.market_embed import refresh_market_embed
 
@@ -10,7 +10,7 @@ from cogs.market_embed import refresh_market_embed
 # =============================
 class PlayerPaginationView(View):
     def __init__(self, bot, guild_id, item_name, players, open_modal_callback):
-        super().__init__(timeout=180)
+        super().__init__(timeout=None)
         self.bot = bot
         self.guild_id = guild_id
         self.item_name = item_name
@@ -26,12 +26,14 @@ class PlayerPaginationView(View):
 
         # Add navigation buttons
         self.prev_button = Button(label="Prev", style=discord.ButtonStyle.gray)
+        self.page_button = Button(label=f'{self.page_index + 1}/{len(self.pages)}', style=discord.ButtonStyle.gray, disabled=True)
         self.next_button = Button(label="Next", style=discord.ButtonStyle.gray)
 
         self.prev_button.callback = self.prev_page
         self.next_button.callback = self.next_page
 
         self.add_item(self.prev_button)
+        self.add_item(self.page_button)
         self.add_item(self.next_button)
 
     def paginate(self, lst, page_size=25):
@@ -42,7 +44,7 @@ class PlayerPaginationView(View):
     def build_select(self, player_page):
         select = Select(
             placeholder="Select a player",
-            options=[discord.SelectOption(label=p["display"], value=str(p["id"])) for p in player_page],
+            options=[discord.SelectOption(label=p["display"], value=str(p["display"])) for p in player_page],
             min_values=1,
             max_values=1
         )
@@ -60,6 +62,8 @@ class PlayerPaginationView(View):
         self.select = self.build_select(self.pages[self.page_index])
         self.add_item(self.select)
         self.add_item(self.prev_button)
+        self.page_button.label = f'{self.page_index + 1}/{len(self.pages)}'
+        self.add_item(self.page_button)
         self.add_item(self.next_button)
         await interaction.edit_original_response(view=self)
 
@@ -96,7 +100,7 @@ class DeletePlayerPaginationView(View):
         guild_id: guild ID to fetch players from DB
         open_callback: coroutine to call when a player is selected. Signature: async def callback(interaction, player_id)
         """
-        super().__init__(timeout=180)
+        super().__init__(timeout=None)
         self.bot = bot
         self.guild_id = guild_id
         self.open_callback = open_callback
@@ -111,10 +115,12 @@ class DeletePlayerPaginationView(View):
 
         # Pagination buttons
         self.prev_button = Button(label="Prev", style=discord.ButtonStyle.gray)
+        self.page_button = Button(label=f'{self.page_index + 1}/{len(self.pages)}', style=discord.ButtonStyle.gray, disabled=True)
         self.next_button = Button(label="Next", style=discord.ButtonStyle.gray)
         self.prev_button.callback = self.prev_page
         self.next_button.callback = self.next_page
         self.add_item(self.prev_button)
+        self.add_item(self.page_button)
         self.add_item(self.next_button)
 
     def paginate(self, lst, page_size=25):
@@ -149,6 +155,8 @@ class DeletePlayerPaginationView(View):
         self.select = self.build_select(self.pages[self.page_index])
         self.add_item(self.select)
         self.add_item(self.prev_button)
+        self.page_button.label = f'{self.page_index + 1}/{len(self.pages)}'
+        self.add_item(self.page_button)
         self.add_item(self.next_button)
         await interaction.edit_original_response(view=self)
 
@@ -239,7 +247,7 @@ class MarketView(View):
                 #     await i_inter.delete_original_response()
 
             player_select.callback = player_callback
-            view = discord.ui.View()
+            view = discord.ui.View(timeout=None)
             view.add_item(player_select)
 
             await i_inter.response.edit_message(
@@ -249,7 +257,7 @@ class MarketView(View):
 
         item_select.callback = item_callback
 
-        view = discord.ui.View()
+        view = discord.ui.View(timeout=None)
         view.add_item(item_select)
 
         message = await interaction.followup.send(
@@ -273,7 +281,7 @@ class MarketView(View):
             placeholder="Select an item",
             options=[
                 discord.SelectOption(
-                    label=f"{i["item"]} ({i["keyword"]})",
+                    label=f"{i['item']} ({i['keyword']})",
                     value=i["item"]
                 )
                 for i in items[:25]
@@ -299,7 +307,7 @@ class MarketView(View):
             await i_inter.response.edit_message(content=f"**{selected_item}** → Select a player:", view=view)
 
         item_select.callback = item_callback
-        view = View()
+        view = View(timeout=None)
         view.add_item(item_select)
 
         await interaction.response.defer(ephemeral=True)
@@ -379,7 +387,7 @@ class MarketView(View):
         async def delete_callback(interaction: discord.Interaction, player_name: str):
             # Delete player in DB
             db.delete_player(interaction.guild.id, player_name)
-            await refresh_market_embed(self.bot, interaction.guild)
+            await refresh_market_embed(self.bot, interaction.guild, interaction.user.name)
             await interaction.response.defer(ephemeral=True)  # acknowledge interaction
             await interaction.delete_original_response()
             msg = await interaction.followup.send(
@@ -403,7 +411,11 @@ class MarketView(View):
         # await interaction.response.send_message(
         #     "Select a player to delete:", view=view, ephemeral=True
         # )
+    # @button(label="Scan Image", style=discord.ButtonStyle.green, custom_id="market:scan_image")
+    # async def scan_image(self, interaction: discord.Interaction, button: discord.ui.Button):
+    #     await self.delete_last_interaction()
 
+    #     await interaction.response.send_modal(ImageUploadModal(self.bot))
 
 class AddPriceModal(Modal, title="Add Price"):
     percentage = TextInput(label="Percentage (e.g. 213)")
@@ -428,7 +440,7 @@ class AddPriceModal(Modal, title="Add Price"):
         except db.ItemNotFound:
             msg = f"Item **{self.item_name}** not found."
         except db.PlayerNotFound:
-            msg = f"Player **{self.player.value}** not found."
+            msg = f"Player **{self.player}** not found."
         except ValueError:
             msg = "Please enter a valid value for percentage."
         except Exception as e:
@@ -473,7 +485,7 @@ class AddPlayerModal(Modal, title="Add Player"):
     async def on_submit(self, interaction: discord.Interaction):
         db.add_player(interaction.guild.id, self.name.value, self.discord_handle.value or None)
         # await refresh_market_embed(self.bot, interaction.guild, interaction.user.name)
-        await interaction.response.send_message(f"**{self.name.value}** added.", ephemeral=True, delete_after=3)
+        await interaction.response.send_message(f"Player **{self.name.value}** added.", ephemeral=True, delete_after=3)
 
 
 # class DeletePlayerModal(Modal, title="Delete Player"):
@@ -494,3 +506,27 @@ class AddPlayerModal(Modal, title="Add Player"):
 #             msg = str(e)
 #             raise
 #         await interaction.response.send_message(msg, ephemeral=True, delete_after=3)
+
+
+# Not supported until 2.7 (currently 2.6.4)
+# class ImageUploadModal(Modal, title="Upload Your Image"):
+#     image = FileUpload(
+#         label="Upload Image",
+#         placeholder="Drag and drop your image here",
+#         style=discord.TextStyle.short,
+#         required=True
+#     )
+
+#     def __init__(self, bot):
+#         super().__init__()
+#         self.bot = bot
+
+#     async def on_submit(self, interaction: discord.Interaction):
+#         # Get the uploaded file
+#         files = interaction.files  # List of uploaded files
+#         if files:
+#             file = files[0]
+#             # Save or process the file
+#             await interaction.response.send_message(f"Received: {file.filename}", ephemeral=True)
+#         else:
+#             await interaction.response.send_message("No file uploaded.", ephemeral=True)
