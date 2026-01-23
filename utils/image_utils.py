@@ -6,6 +6,7 @@ import numpy as np
 from google.cloud import vision
 from google.oauth2 import service_account
 from urllib.request import urlopen
+import aiohttp
 
 # ================= CONFIG =================
 TEMPLATE_DIR = "templates"
@@ -176,11 +177,16 @@ class ImageProcessor:
     
     async def read_image_from_url(self):
         try:
-            resp = urlopen(self.url)
-            image_bytes = resp.read()
-            nparr = np.frombuffer(image_bytes, np.uint8)
-            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            return image
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.url) as resp:
+                    image_bytes = await resp.read()
+                    nparr = np.frombuffer(image_bytes, np.uint8)
+                    return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            # resp = urlopen(self.url)
+            # image_bytes = resp.read()
+            # nparr = np.frombuffer(image_bytes, np.uint8)
+            # image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            # return image
         except Exception as e:
             print(f"[ERROR] Failed to read image from URL: {e}")
             return None
@@ -233,7 +239,7 @@ class ImageProcessor:
     def set_content(self, content):
         self.content = content
     
-    async def scan_image_for_market_data(self):
+    def scan_image_for_market_data(self):
         self.image = vision.Image(content=self.content)
         self.image.source.image_uri = self.url
         player_names = []

@@ -25,6 +25,14 @@ class Market(commands.Cog):
         self.processor = bot.image_processor
         self.daily_reset.start()
         self.monthly_reset.start()
+
+    async def run_cv(self, func, *args):
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            self.bot.cv_executor,
+            func,
+            *args
+    )
     
     # ======================================================
     # Error Handler
@@ -219,11 +227,19 @@ class Market(commands.Cog):
                 raise
             
             try:
+                await ctx.defer()
                 self.processor.set_image_url(attachment.url)
                 image = await self.processor.read_image_from_url()
-                best_item_detected, _, _ = self.processor.detect_item_with_regions(image)
+                # best_item_detected, _, _ = self.processor.detect_item_with_regions(image)
+                best_item_detected, _, _ = await self.run_cv(
+                    self.processor.detect_item_with_regions,
+                    image
+                )
                 # result_pairs = await self.processor.scan_image_for_market_data()
-                result_pairs = await self.processor.scan_image_for_market_data()
+                # result_pairs = await self.processor.scan_image_for_market_data()
+                result_pairs = await self.run_cv(
+                    self.processor.scan_image_for_market_data
+                )
                 if not result_pairs:
                     msg = "No market data detected on this image."
                     await self._respond(ctx, msg)
@@ -252,7 +268,7 @@ class Market(commands.Cog):
     # ======================================================
     # DAILY RESET TASK
     # ======================================================
-    @tasks.loop(time=dtime(hour=0, minute=40, tzinfo=timezone.utc))
+    @tasks.loop(time=dtime(hour=RESET_HOUR_UTC, tzinfo=timezone.utc))
     async def daily_reset(self):
         db.reset_market_prices()
 
