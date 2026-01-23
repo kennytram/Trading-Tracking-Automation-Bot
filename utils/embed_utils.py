@@ -6,8 +6,7 @@ from collections import defaultdict
 
 from utils.time_utils import (
     next_reset_today_or_tomorrow,
-    next_weekday_at_hour,
-    next_thursday_and_sunday
+    next_friday_and_sunday
 )
 # from windtail_config import RESET_HOUR_UTC, ICON_URL
 
@@ -16,7 +15,7 @@ def format_market_embed(guild, rows, requester_name="System"):
     now = datetime.now(timezone.utc)
 
     unix_today_reset = next_reset_today_or_tomorrow(int(os.environ.get('RESET_HOUR_UTC', "22")))
-    unix_thursday, unix_sunday = next_thursday_and_sunday(int(os.environ.get('RESET_HOUR_UTC', "22")))
+    unix_friday, unix_sunday = next_friday_and_sunday(int(os.environ.get('RESET_HOUR_UTC', "22")))
 
     embed = discord.Embed(
         title="Where Winds Meet Market Trades",
@@ -26,8 +25,8 @@ def format_market_embed(guild, rows, requester_name="System"):
 
     embed.description = "\n".join([
         f"Daily reset for market prices occurs at <t:{unix_today_reset}:t>",
-        f"Stock resets on <t:{unix_thursday}:F> and <t:{unix_sunday}:F>",
-        f"New market fluctuations occur on <t:{unix_thursday}:F>",
+        f"Stock resets on <t:{unix_friday}:F> and <t:{unix_sunday}:F>",
+        f"New market fluctuations occur on <t:{unix_friday}:F>",
         ""
     ])
     

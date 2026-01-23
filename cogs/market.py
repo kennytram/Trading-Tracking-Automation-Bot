@@ -20,7 +20,9 @@ MIN_MARKET_PRICE_SCAN_ADDED = int(os.environ.get('MIN_MARKET_PRICE_SCAN_ADDED'))
 class Market(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.processor = ImageProcessor()
+        if not hasattr(bot, "image_processor"):
+            bot.image_processor = ImageProcessor()
+        self.processor = bot.image_processor
         self.daily_reset.start()
         self.monthly_reset.start()
     
@@ -227,10 +229,12 @@ class Market(commands.Cog):
                     await self._respond(ctx, msg)
                     return
                 elif len(result_pairs) == 1 and not result_pairs[0][0]:
-                    uploader = db.fetch_player_by_discord(ctx.author.name)
+                    uploader = db.fetch_player_by_discord(ctx.guild.id, ctx.author.name)
                     percentage = result_pairs[0][1]
                     if uploader:
-                        self.add(best_item_detected, percentage, uploader['name'])
+                        db.upsert_price(ctx.guild.id, best_item_detected, uploader['player_name'], percentage)
+                        await refresh_market_embed(self.bot, ctx.guild, ctx.author.name)
+                        msg = "Price added."
                     else:
                         msg = "Please add yourself to the player list with your discord handle first."
                 else:
@@ -248,7 +252,7 @@ class Market(commands.Cog):
     # ======================================================
     # DAILY RESET TASK
     # ======================================================
-    @tasks.loop(time=dtime(hour=RESET_HOUR_UTC, tzinfo=timezone.utc))
+    @tasks.loop(time=dtime(hour=0, minute=40, tzinfo=timezone.utc))
     async def daily_reset(self):
         db.reset_market_prices()
 

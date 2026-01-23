@@ -30,7 +30,7 @@ def next_reset_today_or_tomorrow(hour: int) -> int:
     return int(tomorrow.timestamp())
 
 
-def next_thursday_and_sunday(hour: int) -> tuple[int, int]:
-    thursday = next_weekday_at_hour(3, hour)
+def next_friday_and_sunday(hour: int) -> tuple[int, int]:
+    friday = next_weekday_at_hour(4, hour)
     sunday = next_weekday_at_hour(6, hour)
-    return tuple(sorted((thursday, sunday)))
+    return tuple(sorted((friday, sunday)))

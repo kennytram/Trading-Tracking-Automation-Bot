@@ -254,6 +254,8 @@ class ImageProcessor:
             if len(line) == 1 and line.isupper():
                 continue
             if VALID_NAME_REGEX.match(line):
+                if line == 'rin':
+                    line = 'riŋ'
                 player_names.append(line)
 
         percent_regex = re.compile(r"^[\+\-]?(\d+)%")
@@ -293,7 +295,7 @@ class ImageProcessor:
         self.reset_garbage()
 
         # return data. If data is empty, return percentage to indicate it's local
-        return pairs if pairs else ["", percentages[0]]
+        return pairs if pairs else [("", percentages[0])]
     
     def reset_garbage(self):
         self.content = None

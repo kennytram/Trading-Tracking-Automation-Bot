@@ -118,12 +118,12 @@ def get_player_id(server_id, name):
 def fetch_player_by_discord(server_id, discord):
     with get_conn() as conn:
         row = conn.execute(
-            """SELECT id FROM player
+            """SELECT id, player_name FROM player
                WHERE server_id = ?
                AND discord_handle = ? COLLATE NOCASE""",
             (server_id, discord.lower())
         ).fetchone()
-        return row["id"] if row else None
+        return row if row else None
     
 def get_rate_limit(name):
     with get_conn() as conn:

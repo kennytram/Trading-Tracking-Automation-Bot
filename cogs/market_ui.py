@@ -3,6 +3,11 @@ import asyncio
 from discord.ui import View, button, Modal, TextInput, Select, Button
 import windtail_db as db
 from cogs.market_embed import refresh_market_embed
+import os
+
+# OCR_NAME = os.environ.get('OCR_NAME')
+# CURRENT_OCR_QUOTA = int(os.environ.get("CURRENT_OCR_QUOTA"))
+# MIN_MARKET_PRICE_SCAN_ADDED = int(os.environ.get('MIN_MARKET_PRICE_SCAN_ADDED'))
 
 
 # =============================
@@ -413,9 +418,95 @@ class MarketView(View):
         # )
     # @button(label="Scan Image", style=discord.ButtonStyle.green, custom_id="market:scan_image")
     # async def scan_image(self, interaction: discord.Interaction, button: discord.ui.Button):
-    #     await self.delete_last_interaction()
+    #     # await self.delete_last_interaction()
 
-    #     await interaction.response.send_modal(ImageUploadModal(self.bot))
+    #     # await interaction.response.send_modal(ImageUploadModal(self.bot))
+
+    #     await self.delete_last_interaction()
+    #     await interaction.response.send_message(
+    #         "Please upload the image in your next message.",
+    #         ephemeral=True
+    #     )
+
+    #     def check(m):
+    #         return (
+    #             m.author == interaction.user
+    #             and m.channel == interaction.channel
+    #             and m.attachments
+    #         )
+
+    #     try:
+    #         img_msg = await self.bot.wait_for("message", check=check, timeout=60)
+    #         image = img_msg.attachments[0]
+
+    #         # OCR logic here
+    #         bot_wait_msg = await interaction.followup.send("Image received. Scanning…", ephemeral=True)
+
+    #         try:
+    #             current_rate = db.get_rate_limit(OCR_NAME)
+    #             print(current_rate)
+    #             if current_rate and current_rate["count"] < CURRENT_OCR_QUOTA:
+    #                 db.increment_rate_limit(OCR_NAME)
+    #             else:
+    #                 msg = "Rate limit reached."
+    #                 msg = await interaction.followup.send(msg)
+    #                 await asyncio.sleep(3)
+    #                 await msg.delete()
+    #                 return
+    #         except Exception as e:
+    #             msg = str(e)
+    #             msg = await interaction.followup.send(msg)
+    #             await asyncio.sleep(3)
+    #             await msg.delete()
+    #             raise
+
+    #         try:
+    #             image_processor = self.bot.image_processor
+    #             image_processor.set_image_url(image.url)
+    #             image = await image_processor.read_image_from_url()
+    #             best_item_detected, _, _ = image_processor.detect_item_with_regions(image)
+    #             # result_pairs = await self.processor.scan_image_for_market_data()
+    #             result_pairs = await image_processor.scan_image_for_market_data()
+    #             if not result_pairs:
+    #                 msg = await interaction.followup.send(
+    #                     "No market data detected on this image.", ephemeral=True
+    #                 )
+    #                 await asyncio.sleep(3)
+    #                 await msg.delete()
+    #                 return
+    #             elif len(result_pairs) == 1 and not result_pairs[0][0]:
+    #                 uploader = db.fetch_player_by_discord(interaction.user.name)
+    #                 percentage = result_pairs[0][1]
+    #                 if uploader:
+    #                     self.add(best_item_detected, percentage, uploader['name'])
+    #                 else:
+    #                     msg = await interaction.followup.send(
+    #                     "Please add yourself to the player list with your discord handle first.", ephemeral=True
+    #                     )
+    #                     await asyncio.sleep(3)
+    #                     await msg.delete()
+    #             else:
+    #                 player_names, percentages = zip(*result_pairs)
+    #                 db.add_many_scanned_players(interaction.guild.id, player_names)
+    #                 db.upsert_many_prices(interaction.guild.id, best_item_detected, player_names, percentages, MIN_MARKET_PRICE_SCAN_ADDED)
+    #                 await refresh_market_embed(self.bot, interaction.guild.id, interaction.user.name)
+    #                 msg = "Prices added."
+    #                 msg = await interaction.followup.send(msg, ephemeral=True)
+    #                 await asyncio.sleep(3)
+    #                 await msg.delete()
+                    
+    #         except Exception as e:
+    #             msg = "Scanning errors. Please try again later."
+    #             msg = await interaction.followup.send(msg, ephemeral=True)
+    #             await asyncio.sleep(3)
+    #             await msg.delete()
+                    
+
+    #     except asyncio.TimeoutError:
+    #         await interaction.followup.send("Timed out waiting for image.", ephemeral=True)
+
+    #     await img_msg.delete()
+    #     await bot_wait_msg.delete()
 
 class AddPriceModal(Modal, title="Add Price"):
     percentage = TextInput(label="Percentage (e.g. 213)")
@@ -510,12 +601,7 @@ class AddPlayerModal(Modal, title="Add Player"):
 
 # Not supported until 2.7 (currently 2.6.4)
 # class ImageUploadModal(Modal, title="Upload Your Image"):
-#     image = FileUpload(
-#         label="Upload Image",
-#         placeholder="Drag and drop your image here",
-#         style=discord.TextStyle.short,
-#         required=True
-#     )
+#     image = FileUpload()
 
 #     def __init__(self, bot):
 #         super().__init__()
